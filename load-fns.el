@@ -5,7 +5,7 @@
 ;; Author: Noah Friedman <friedman@splode.com>
 ;; Maintainer: friedman@splode.com
 
-;; $Id: load-fns.el,v 1.8 2007/08/09 07:07:38 friedman Exp $
+;; $Id: load-fns.el,v 1.10 2014/11/17 17:54:59 friedman Exp $
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's maintainer or write to: The Free Software Foundation,
-;; Inc.; 51 Franklin Street, Fifth Floor; Boston, MA 02110-1301, USA.
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; Code:
@@ -360,7 +358,12 @@ forms which were not already present."
 ;;;###autoload
 (defun add-forms-to-after-load-alist (forms)
   (mapc (lambda (f)
-          (apply 'add-after-load-alist f))
+          (if (cdr (cdr f))
+              ;; Make sure current set of forms are evaluated as a block in
+              ;; the order specified.  eval-after-load pushes subsequent
+              ;; forms to the front of the list, not end.
+              (eval-after-load (car f) `(progn ,@(cdr f)))
+            (eval-after-load (car f) (car (cdr f)))))
     forms))
 
 ;; indent like save-excursion
